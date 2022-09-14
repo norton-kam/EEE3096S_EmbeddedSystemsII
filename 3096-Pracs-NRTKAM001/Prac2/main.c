@@ -55,7 +55,7 @@ typedef struct {
 //TO DO:
 //TASK 4
 //Define the RTC slave address
-#define DS3231_ADDRESS 0x0
+#define DS3231_ADDRESS 0xD0
 
 #define EPOCH_2022 1640988000
 /* USER CODE END PD */
