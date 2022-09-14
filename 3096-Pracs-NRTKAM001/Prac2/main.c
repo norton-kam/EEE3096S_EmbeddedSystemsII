@@ -141,7 +141,7 @@ int main(void){
   //TASK 6
   //YOUR CODE HERE
 
-  setTime(0, 2, 3, 2, 4, 5, 1); //set time to random
+  setTime(0,20,9,3,14,9,22); //set time to random
 
   /* USER CODE END 2 */
 
