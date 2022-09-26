@@ -27,7 +27,6 @@ RTC Connections: (+)->5V (-)->GND D->PB7 (I2C1_SDA) C->PB6 (I2C1_SCL)
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include "stdio.h"
-//#include "time.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -49,8 +48,8 @@ typedef struct {
 //TO DO:
 //TASK 2
 //Give DELAY1 and DELAY2 sensible values
-#define DELAY1 3760
-#define DELAY2 250
+#define DELAY1 875
+#define DELAY2 3760
 
 //TO DO:
 //TASK 4
@@ -73,8 +72,6 @@ DMA_HandleTypeDef hdma_usart2_tx;
 
 /* USER CODE BEGIN PV */
 char buffer[14];
-char buffer2[14];
-char buffer3[14];
 uint8_t data [] = "Hello from STM32!\r\n";
 TIME time;
 /* USER CODE END PV */
@@ -109,7 +106,7 @@ int epochFromTime(TIME time);
 int main(void){
 
   /* USER CODE BEGIN 1 */
-	int epoch;
+
   /* USER CODE END 1 */
 
   /* MCU Configuration--------------------------------------------------------*/
@@ -118,7 +115,6 @@ int main(void){
   HAL_Init();
 
   /* USER CODE BEGIN Init */
-
   /* USER CODE END Init */
 
   /* Configure the system clock */
@@ -140,11 +136,15 @@ int main(void){
   //TO DO
   //TASK 6
   //YOUR CODE HERE
-
-  setTime(0,20,9,3,14,9,22); //set time to random
-
+  setTime(19,10,12,5,23,9,22);
+  //getTime();
+  //sprintf (buffer, "%d\r\n", epochFromTime(time));
+  //HAL_UART_Transmit(&huart2, buffer, sizeof(buffer), 1000);
   /* USER CODE END 2 */
-
+  //sprintf (buffer, "%d\r\n", bcdToDec(00010000));
+  //HAL_UART_Transmit(&huart2, buffer, sizeof(buffer), 1000);
+  //sprintf (buffer, "%d\r\n", decToBcd(10));
+  //HAL_UART_Transmit(&huart2, buffer, sizeof(buffer), 1000);
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   while (1)
@@ -152,30 +152,29 @@ int main(void){
     /* USER CODE END WHILE */
 	//TO DO:
 	//TASK 1
-	//First run this with nothing else in the loop and scope pin PC8 on an oscilloscope
 	HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_8);
 	pause_sec(1);
-	//uint8_t out = decToBcd(7); //testing BCDtoDec function
-	//printf(out);
 	//TO DO:
 	//TASK 6
 	getTime();
-	epoch = epochFromTime(time);
+	sprintf (buffer, "%02d-%02d-20%02d\r\n", time.dayofmonth, time.month, time.year);
+	HAL_UART_Transmit(&huart2, buffer, sizeof(buffer), 1000);
 
-	sprintf(buffer, "%02d:%02d:%02d\r\n", time.hour, time.minutes, time.seconds);
-	HAL_UART_Transmit(&huart2, buffer, sizeof(buffer), 1000);//Transmit data via UART
+	sprintf (buffer,  "%02d:%02d:%02d\r\n",time.hour, time.minutes, time.seconds);
+	HAL_UART_Transmit(&huart2, buffer, sizeof(buffer), 1000);
 
-	sprintf(buffer, "%02d-%02d-20%02d\r\n", time.dayofmonth, time.month,time.year);
-	HAL_UART_Transmit(&huart2, buffer, sizeof(buffer), 1000);//Transmit data via UART
+	sprintf (buffer, "%d\r\n", epochFromTime(time));
+	HAL_UART_Transmit(&huart2, buffer, sizeof(buffer), 1000);
 
-	sprintf(buffer, "%d\r\n", epoch);
-	HAL_UART_Transmit(&huart2, buffer, sizeof(buffer), 1000);//Transmit data via UART
+	//This creates a string "55555555555555" with a pointer called buffer
 
+	//Transmit data via UART
 	//Blocking! fine for small buffers
+	//HAL_UART_Transmit(&huart2, buffer, sizeof(buffer), 1000);
 
-	//getTime();
+	getTime();
 
-	//YOUR CODE HERE
+
 
 
 
@@ -206,7 +205,7 @@ void SystemClock_Config(void)
   RCC_OscInitStruct.PLL.PREDIV = RCC_PREDIV_DIV1;
   if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK)
   {
-    //Error_Handler();
+    Error_Handler();
   }
 
   /** Initializes the CPU, AHB and APB buses clocks
@@ -219,13 +218,13 @@ void SystemClock_Config(void)
 
   if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_1) != HAL_OK)
   {
-    //Error_Handler();
+    Error_Handler();
   }
   PeriphClkInit.PeriphClockSelection = RCC_PERIPHCLK_I2C1;
   PeriphClkInit.I2c1ClockSelection = RCC_I2C1CLKSOURCE_HSI;
   if (HAL_RCCEx_PeriphCLKConfig(&PeriphClkInit) != HAL_OK)
   {
-   // Error_Handler();
+    Error_Handler();
   }
 }
 
@@ -255,21 +254,21 @@ static void MX_I2C1_Init(void)
   hi2c1.Init.NoStretchMode = I2C_NOSTRETCH_DISABLE;
   if (HAL_I2C_Init(&hi2c1) != HAL_OK)
   {
-    //Error_Handler();
+    Error_Handler();
   }
 
   /** Configure Analogue filter
   */
   if (HAL_I2CEx_ConfigAnalogFilter(&hi2c1, I2C_ANALOGFILTER_ENABLE) != HAL_OK)
   {
-    //Error_Handler();
+    Error_Handler();
   }
 
   /** Configure Digital filter
   */
   if (HAL_I2CEx_ConfigDigitalFilter(&hi2c1, 0) != HAL_OK)
   {
-   // Error_Handler();
+    Error_Handler();
   }
   /* USER CODE BEGIN I2C1_Init 2 */
 
@@ -304,7 +303,7 @@ static void MX_USART2_UART_Init(void)
   huart2.AdvancedInit.AdvFeatureInit = UART_ADVFEATURE_NO_INIT;
   if (HAL_UART_Init(&huart2) != HAL_OK)
   {
-   // Error_Handler();
+    Error_Handler();
   }
   /* USER CODE BEGIN USART2_Init 2 */
 
@@ -367,15 +366,14 @@ void pause_sec(float x)
 	/* Delay program execution for x seconds */
 	//TO DO:
 	//TASK 2
-	for(int i=0; i<DELAY1;i++){
-		for(int j=0; j<DELAY2;j++){
-			for(int k=0;k<x;k++){
-				//3 nested for loops
+	//Make sure you've defined DELAY1 and DELAY2 in the private define section
+	for(int count = 0; count < x;count++){
+		for(int a = 0; a < DELAY1; a++){
+			for(int b = 0; b < DELAY2; b++){
+				//Nothing here but time
 			}
 		}
 	}
-
-	//YOUR CODE HERE
 }
 
 uint8_t decToBcd(int val)
@@ -383,9 +381,7 @@ uint8_t decToBcd(int val)
     /* Convert normal decimal numbers to binary coded decimal*/
 	//TO DO:
 	//TASK 3
-
-	//YOUR CODE HERE
-	return (uint8_t)(((val/10)<<4)+(val%10));
+	return (uint8_t) ((val/10*16)+(val%10));
 }
 
 int bcdToDec(uint8_t val)
@@ -393,11 +389,7 @@ int bcdToDec(uint8_t val)
     /* Convert binary coded decimal to normal decimal numbers */
 	//TO DO:
 	//TASK 3
-	//Complete the BCD to decimal function
-
-	//YOUR CODE HERE
-	return (int)((val>>4)*10 +(val & 0x0F));
-
+	return (int) ((val/16*10)+(val%16));
 }
 
 void setTime (uint8_t sec, uint8_t min, uint8_t hour, uint8_t dow, uint8_t dom, uint8_t month, uint8_t year)
@@ -407,19 +399,21 @@ void setTime (uint8_t sec, uint8_t min, uint8_t hour, uint8_t dow, uint8_t dom, 
 	//TASK 4
 
 	uint8_t set_time[7];
+	set_time[0] = decToBcd(sec);
+	set_time[1] = decToBcd(min);
+	set_time[2] = decToBcd(hour);
+	set_time[3] = decToBcd(dow);
+	set_time[4] = decToBcd(dom);
+	set_time[5] = decToBcd(month);
+	set_time[6] = decToBcd(year);
 
-	//YOUR CODE HERE
-	set_time[0]=decToBcd(sec);
-	set_time[1]=decToBcd(min);
-	set_time[2]=decToBcd(hour);
-	set_time[3]=decToBcd(dow);
-	set_time[4]=decToBcd(dom);
-	set_time[5]=decToBcd(month);
-	set_time[6]=decToBcd(year);
 	//fill in the address of the RTC, the address of the first register to write anmd the size of each register
 	//The function and RTC supports multiwrite. That means we can give the function a buffer and first address
 	//and it will write 1 byte of data, increment the register address, write another byte and so on
+	//HAL_I2C_Mem_Write(&hi2c1, huart2, 0x00, 1, set_time, 7, 1000);
 	HAL_I2C_Mem_Write(&hi2c1, DS3231_ADDRESS, 0x00, 1, set_time, 7, 1000);
+	//HAL UART Transmit(huart2, buffer, sizeof(buffer), 1000);
+
 
 }
 
@@ -435,10 +429,10 @@ void getTime (void)
 	//fill in the address of the RTC, the address of the first register to write anmd the size of each register
 	//The function and RTC supports multiread. That means we can give the function a buffer and first address
 	//and it will read 1 byte of data, increment the register address, write another byte and so on
-	HAL_I2C_Mem_Read(&hi2c1, DS3231_ADDRESS, 0x00, 1, get_time, 7, 1000);
+	//HAL_I2C_Mem_Read(&hi2c1, DS3231_ADDRESS, 0x00, 1, get_time, 7, 1000);
 
 
-	//YOUR CODE HERE
+	HAL_I2C_Mem_Read(&hi2c1, DS3231_ADDRESS,0x00, 1, get_time,7,1000);
 	time.seconds = bcdToDec(get_time[0]);
 	time.minutes = bcdToDec(get_time[1]);
 	time.hour = bcdToDec(get_time[2]);
@@ -447,70 +441,70 @@ void getTime (void)
 	time.month = bcdToDec(get_time[5]);
 	time.year = bcdToDec(get_time[6]);
 
-
-
 }
 
-int epochFromTime(TIME time){
+int epochFromTime(TIME time)
+{
     /* Convert time to UNIX epoch time */
 	//TO DO:
 	//TASK 5
 	//You have been given the epoch time for Saturday, January 1, 2022 12:00:00 AM GMT+02:00
 	//It is define above as EPOCH_2022. You can work from that and ignore the effects of leap years/seconds
+	int month = time.month;
+	int sec = time.seconds;
+	int min = time.minutes;
+	int hour = time.hour;
 	int day = time.dayofmonth;
-	int months = time.month;
-	//YOUR CODE HERE
+	int year = time.year;
 
-	switch(months){
-	case 2:
-		day +=31;
-	break;
+		int epoch = 0;
+		int nyear = year - 22;
+		epoch = epoch + nyear*365*86400;
 
-	case 3:
-		day += (31+28);
-	break;
+		if (month == 1){
+			epoch = epoch;
+		}
+		else if(month == 2){
+			epoch = epoch + (31)*86400;
+		}
+		else if(month == 3){
+				epoch = epoch + (59)*86400;
+			}
+		else if(month == 4){
+				epoch = epoch + (90)*86400;
+			}
+		else if(month == 5){
+				epoch = epoch + (120)*86400;
+			}
+		else if(month == 6){
+				epoch = epoch + (151)*86400;
+			}
+		else if(month == 7){
+				epoch = epoch + (181)*86400;
+			}
+		else if(month == 8){
+				epoch = epoch + (212)*86400;
+			}
+		else if(month == 9){
+				epoch = epoch + (243)*86400;
+			}
+		else if(month == 10){
+				epoch = epoch + (273)*86400;
+			}
+		else if(month == 11){
+				epoch = epoch + (304)*86400;
+			}
+		else if(month == 12){
+				epoch = epoch + (334)*86400;
+			}
 
-	case 4:
-		day += (31*2+28);
-	break;
-
-	case 5:
-		day+= (28+31*2+30);
-	break;
-
-	case 6:
-		day+= (28+31*3+30);
-	break;
-
-	case 7:
-		day+= (28+31*3+30*2);
-	break;
-
-	case 8:
-		day+= (28+31*4+30*2);
-	break;
-
-	case 9:
-		day+=(28+31*5+30*2);
-	break;
-
-	case 10:
-		day+=(28+31*5+30*3);
-	break;
-
-	case 11:
-		day+=(28+31*6+30*3);
-	break;
-
-	case 12:
-		day+=(28+31*6+30*4);
-	break;
-
-	default:
-		day = day;
-	}
-
-	return EPOCH_2022 + day*(86400); //epoch + number of seconds in a day*days
+		if(day == 0){
+			epoch = epoch +(day)*86400+hour*3600+min*60+sec;
+		}
+		else{
+			epoch = epoch +(day-1)*86400+hour*3600+min*60+sec;
+		}
+	return (EPOCH_2022+epoch);
 }
 
 /* USER CODE END 4 */
